@@ -40,20 +40,22 @@ public class PricelistView extends HttpServlet {
 
 		RequestDispatcher dispatcher;
 		
-//		response.setContentType("text/html");
-//		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("text/html");
+		response.setStatus(HttpServletResponse.SC_OK);
 		
 		String catName = request.getParameter("catName");
 		String prodName = request.getParameter("prodName");
 		String lowPrice = request.getParameter("lowPrice");
 		String highPrice = request.getParameter("highPrice");
 		
+		Pattern pt = Pattern.compile("[0-9]{1,16}(\\.[0-9]{0,})?");
+		Matcher ml = pt.matcher(lowPrice);
+		Matcher mh = pt.matcher(highPrice);
+		
 		List<Prod> filteredProds = new ArrayList<Prod>();
 
 		if((lowPrice.length() != 0) && (highPrice.length() == 0)){
-			Pattern pt = Pattern.compile("[0-9]{1,16}(\\.[0-9]{0,})?");
-			Matcher m = pt.matcher(lowPrice);
-			if (!m.matches()) {
+			if (!ml.matches() || !mh.matches()) {
 				Message message = new Message();
 				message.setNote("Не верный формат цены. Пример правильной цены: 1500.50");
 				request.setAttribute("message", message);
@@ -63,29 +65,25 @@ public class PricelistView extends HttpServlet {
 			} else filteredProds = internalBisnessProcess.getProdAbavePrice(Double.valueOf(lowPrice));
 		}
 		else if((lowPrice.length() == 0) && (highPrice.length() != 0)){
-			Pattern pt = Pattern.compile("[0-9]{1,16}(\\.[0-9]{0,})?");
-			Matcher m = pt.matcher(highPrice);
-			if (!m.matches()) {
+			if (!ml.matches() || !mh.matches()) {
 				Message message = new Message();
 				message.setNote("Не верный формат цены. Пример правильной цены: 1500.50");
 				request.setAttribute("message", message);
 				dispatcher = getServletContext().getRequestDispatcher("/error.jsp");
 				dispatcher.forward(request, response);
 				return;
-			} else filteredProds = internalBisnessProcess.getProdBelowPrice(Double.valueOf(highPrice));
+			} filteredProds = internalBisnessProcess.getProdBelowPrice(Double.valueOf(highPrice));
 		}
 		else if((lowPrice.length() != 0) && (highPrice.length() != 0)){
-			Pattern pt = Pattern.compile("[0-9]{1,16}(\\.[0-9]{0,})?");
-			Matcher m = pt.matcher(highPrice);
-			if (!m.matches()) {
+			if (!ml.matches() || !mh.matches()) {
 				Message message = new Message();
 				message.setNote("Не верный формат цены. Пример правильной цены: 1500.50");
 				request.setAttribute("message", message);
 				dispatcher = getServletContext().getRequestDispatcher("/error.jsp");
 				dispatcher.forward(request, response);
 				return;
-			} else filteredProds = internalBisnessProcess.getProdByPrice(Double.valueOf(lowPrice),
-																		 Double.valueOf(highPrice));
+			} filteredProds = internalBisnessProcess.getProdByPrice(Double.valueOf(lowPrice),
+																	Double.valueOf(highPrice));
 		}
 		else filteredProds = internalBisnessProcess.getProdAll();
 		if(prodName.length() != 0){
